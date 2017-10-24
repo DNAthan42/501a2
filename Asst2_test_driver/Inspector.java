@@ -41,6 +41,8 @@ public class Inspector {
         constructors = thisClass.getDeclaredConstructors();
         constructors(constructors);
 
+        System.out.println();
+
         System.out.println("Field Summary");
         fields = thisClass.getDeclaredFields();
         fields(fields);
@@ -65,6 +67,40 @@ public class Inspector {
     		if (first) first = false;
 		}
 		System.out.println();
+	}
+
+	private String getSignature(Executable exec){
+    	Parameter[] parameters = exec.getParameters();
+    	String ret = "";
+
+    	//get modifiers
+    	ret += Modifier.toString(exec.getModifiers()) + " ";
+
+    	//get name
+		ret += exec.getName();
+
+		//get params
+		ret += "(";
+		boolean first = true;
+		String type;
+		for (Parameter parameter: parameters){
+			//check for arrays
+			type = parameter.getType().getName();
+			if (parameter.getType().isArray()){
+				type = arrayCodeToFormattedString(type);
+			}
+			//don't precede the first param with a comma
+			if (first) {
+				ret += "";
+				first = false;
+			}
+			else ret += ", ";
+			//throw in the type and name
+			ret += type + " " + parameter.getName();
+		}
+		ret += ")"; //close the method sig
+
+		return ret;
 	}
 
 	private String arrayCodeToFormattedString(String code){
@@ -99,28 +135,30 @@ public class Inspector {
     	for (Method method: methods){
     		Parameter[] params = method.getParameters();
 
-    		//print the modifiers
-    		System.out.print(Modifier.toString(method.getModifiers()) + " ");
+//    		//print the modifiers
+//    		System.out.print(Modifier.toString(method.getModifiers()) + " ");
+//
+//    		//print the name
+//			System.out.print(method.getName());
+//
+//			//print method signature
+//			System.out.print("(");
+//			boolean first = true;
+//			String type;
+//			for (Parameter parameter: params){
+//				type = parameter.getType().getName();
+//				if (parameter.getType().isArray()){
+//					type = arrayCodeToFormattedString(type);
+//				}
+//				System.out.printf("%s%s %s", (first)?"":", ", type, parameter.getName());
+//				if (first) first = false;
+//			}
+//			System.out.print(")");
 
-    		//print the name
-			System.out.print(method.getName());
-
-			//print method signature
-			System.out.print("(");
-			boolean first = true;
-			String type;
-			for (Parameter parameter: params){
-				type = parameter.getType().getName();
-				if (parameter.getType().isArray()){
-					type = arrayCodeToFormattedString(type);
-				}
-				System.out.printf("%s%s %s", (first)?"":", ", type, parameter.getName());
-				if (first) first = false;
-			}
-			System.out.print(")");
+			System.out.print(getSignature(method));
 
 			//print exceptions
-			first = true;
+			boolean first = true;
 			if (method.getExceptionTypes().length != 0) System.out.print(" throws "); //if the method doesn't throw anything, don't write throws
 			for (Class exception: method.getExceptionTypes()){ //print a list of all the exceptions
 				System.out.printf("%s%s", (first)?"":", ", exception.getName());
@@ -139,7 +177,7 @@ public class Inspector {
 
 	private void constructors(Constructor[] constructors){
 		for (Constructor constructor: constructors){
-
+			System.out.println(getSignature(constructor));
 		}
 	}
 
