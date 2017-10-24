@@ -37,6 +37,10 @@ public class Inspector {
 
         System.out.println();
 
+        System.out.println("Constructor Summary");
+        constructors = thisClass.getDeclaredConstructors();
+        constructors(constructors);
+
         System.out.println("Field Summary");
         fields = thisClass.getDeclaredFields();
         fields(fields);
@@ -95,6 +99,7 @@ public class Inspector {
     	for (Method method: methods){
     		Parameter[] params = method.getParameters();
 
+    		//print the modifiers
     		System.out.print(Modifier.toString(method.getModifiers()) + " ");
 
     		//print the name
@@ -124,6 +129,17 @@ public class Inspector {
 
 			//end the line
 			System.out.println();
+
+			//print the returns on a new line
+			System.out.print("	returns ");
+			if (method.getReturnType().isArray()) System.out.println(arrayCodeToFormattedString(method.getReturnType().getName()));
+			else System.out.println(method.getReturnType().getName());
+		}
+	}
+
+	private void constructors(Constructor[] constructors){
+		for (Constructor constructor: constructors){
+
 		}
 	}
 
