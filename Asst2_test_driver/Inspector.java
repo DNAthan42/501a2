@@ -182,9 +182,14 @@ public class Inspector {
 	}
 
 	private void fields(Field[] fields){
+		String modifiers;
 		for (Field field: fields){
-			if (field.getDeclaringClass().isArray()) System.out.print(arrayCodeToFormattedString(field.getDeclaringClass().getName()));
-			else System.out.print(field.getDeclaringClass().getName());
+
+			modifiers = Modifier.toString(field.getModifiers());
+			System.out.print((modifiers.equals(""))?"":modifiers + " ");
+
+			if (field.getType().isArray()) System.out.print(arrayCodeToFormattedString(field.getType().getName()));
+			else System.out.print(field.getType().getName());
 
 			System.out.print(" ");
 			System.out.println(field.getName());
