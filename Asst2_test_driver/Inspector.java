@@ -48,6 +48,11 @@ public class Inspector {
         fields = thisClass.getDeclaredFields();
         fields(fields, obj);
 
+        //move up the hierarchy by casting obj to it's super class
+		System.out.println("Class: " + obj.getClass());
+		System.out.println("Super: " + obj.getClass().getSuperclass());
+		Object obj2 = obj.getClass().getSuperclass().cast(obj);
+		System.out.println("Cast:  " + obj2.getClass());
 
     }
 
@@ -156,26 +161,6 @@ public class Inspector {
     	for (Method method: methods){
     		Parameter[] params = method.getParameters();
 
-//    		//print the modifiers
-//    		System.out.print(Modifier.toString(method.getModifiers()) + " ");
-//
-//    		//print the name
-//			System.out.print(method.getName());
-//
-//			//print method signature
-//			System.out.print("(");
-//			boolean first = true;
-//			String type;
-//			for (Parameter parameter: params){
-//				type = parameter.getType().getName();
-//				if (parameter.getType().isArray()){
-//					type = arrayCodeToFormattedString(type);
-//				}
-//				System.out.printf("%s%s %s", (first)?"":", ", type, parameter.getName());
-//				if (first) first = false;
-//			}
-//			System.out.print(")");
-
 			System.out.print(getSignature(method));
 
 			//print exceptions
@@ -214,7 +199,6 @@ public class Inspector {
 
 			System.out.print(" ");
 			System.out.print(field.getName());
-			//todo get and print the value
 
 			System.out.print(" = ");
 			field.setAccessible(true);
