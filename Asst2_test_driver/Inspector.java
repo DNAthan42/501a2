@@ -229,6 +229,40 @@ public class Inspector {
 				}
 			}
 
+			if (field.getType().isArray()){
+				field.setAccessible(true);
+				int arrayType = getArrayType(getArrayMatcher(field.getType().getName()).group(2));
+				if (arrayType < ARRAY_TYPE_CODES.length){
+					//todo switch on array type
+				}
+				else if (arrayType == ARRAY_TYPE_CODES.length){
+					Object[] array = null;
+					try {
+						array = (Object[]) field.get(obj);
+					} catch (IllegalAccessException e){
+						System.out.println("couldn't access field " + field.getType().getName());
+					}
+
+					if (array == null) {
+						System.out.println("null");
+						continue;
+					}
+
+					System.out.print("{");
+					boolean first = true;
+					for (Object object: array){
+						if (object != null) System.out.printf("%s%s:%s", (first)?"":", ", object.getClass().getName(), object.hashCode());
+						else System.out.printf("%snull", (first)?"":", ");
+						if (first) first = false;
+					}
+					System.out.print("}");
+				}
+				else {
+					System.out.println("Couldn't get type of array: " + field.getType().getName());
+					System.exit(-1);
+				}
+			}
+
 			//todo use getArrayTypeMethod to cast the array
 			//check for array of primitives
 			if (field.getType().isArray()){
