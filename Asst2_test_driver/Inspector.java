@@ -1,4 +1,5 @@
 import java.lang.reflect.*;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -216,10 +217,10 @@ public class Inspector {
 			//todo get and print the value
 
 			System.out.print(" = ");
+			field.setAccessible(true);
 
 			//check for primitive
 			if (field.getType().isPrimitive()){
-				field.setAccessible(true);
 				try {
 					System.out.print(field.get(obj));
 				} catch (IllegalAccessException e) {
@@ -229,11 +230,23 @@ public class Inspector {
 				}
 			}
 
-			if (field.getType().isArray()){
-				field.setAccessible(true);
+			else if (field.getType().isArray()){
 				int arrayType = getArrayType(getArrayMatcher(field.getType().getName()).group(2));
 				if (arrayType < ARRAY_TYPE_CODES.length){
-					//todo switch on array type
+					try {
+						//I'm very not okay with how get does not wrap array types of primitives.
+						if (arrayType == 0) System.out.print(Arrays.toString((byte[]) field.get(obj)));
+						else if (arrayType == 1) System.out.print(Arrays.toString((char[]) field.get(obj)));
+						else if (arrayType == 2) System.out.print(Arrays.toString((double[]) field.get(obj)));
+						else if (arrayType == 3) System.out.print(Arrays.toString((float[]) field.get(obj)));
+						else if (arrayType == 4) System.out.print(Arrays.toString((int[]) field.get(obj)));
+						else if (arrayType == 5) System.out.print(Arrays.toString((long[]) field.get(obj)));
+						else if (arrayType == 6) System.out.print(Arrays.toString((short[]) field.get(obj)));
+						else System.out.print(Arrays.toString((boolean[]) field.get(obj)));
+					}
+					catch (IllegalAccessException e){
+						System.out.println("couldn't access field " + field.getType().getName());
+					}
 				}
 				else if (arrayType == ARRAY_TYPE_CODES.length){
 					Object[] array = null;
@@ -248,14 +261,14 @@ public class Inspector {
 						continue;
 					}
 
-					System.out.print("{");
+					System.out.print("[");
 					boolean first = true;
 					for (Object object: array){
 						if (object != null) System.out.printf("%s%s:%s", (first)?"":", ", object.getClass().getName(), object.hashCode());
 						else System.out.printf("%snull", (first)?"":", ");
 						if (first) first = false;
 					}
-					System.out.print("}");
+					System.out.print("]");
 				}
 				else {
 					System.out.println("Couldn't get type of array: " + field.getType().getName());
@@ -263,20 +276,15 @@ public class Inspector {
 				}
 			}
 
-			//todo use getArrayTypeMethod to cast the array
-			//check for array of primitives
-			if (field.getType().isArray()){
-				field.setAccessible(true);
-				Object[] array = null;
+			else { //field must be a reference type
+				Object fieldObj = null;
 				try {
-					array = (Object[]) field.get(obj);
-				} catch(IllegalAccessException e){
+					fieldObj = field.get(obj);
+				} catch (IllegalAccessException e) {
 					e.printStackTrace();
-					System.exit(-Integer.parseInt("Shit", 36));
 				}
-				for (Object object: array){
-					if (object != null) System.out.print(object.getClass().getName() + ":" + object.hashCode());
-				}
+				if (fieldObj != null) System.out.printf("%s:%s", fieldObj.getClass().getName(), fieldObj.hashCode());
+				else System.out.print("null");
 			}
 
 			System.out.println();
