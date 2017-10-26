@@ -45,7 +45,7 @@ public class Inspector {
 
         System.out.println("Field Summary");
         fields = thisClass.getDeclaredFields();
-        fields(fields);
+        fields(fields, obj);
 
 
     }
@@ -181,7 +181,7 @@ public class Inspector {
 		}
 	}
 
-	private void fields(Field[] fields){
+	private void fields(Field[] fields, Object obj){
 		String modifiers;
 		for (Field field: fields){
 
@@ -192,8 +192,39 @@ public class Inspector {
 			else System.out.print(field.getType().getName());
 
 			System.out.print(" ");
-			System.out.println(field.getName());
+			System.out.print(field.getName());
 			//todo get and print the value
+
+			System.out.print(" = ");
+
+			//check for primitive
+			if (field.getType().isPrimitive()){
+				field.setAccessible(true);
+				try {
+					System.out.print(field.get(obj));
+				} catch (IllegalAccessException e) {
+					//I literally just setAccessible(true). This shouldn't happen
+					e.printStackTrace();
+					System.exit(-Integer.parseInt("Fuck", 36));
+				}
+			}
+
+			//check for array of primitives
+			if (field.getType().isArray()){
+				field.setAccessible(true);
+				Object[] array = null;
+				try {
+					array = (Object[]) field.get(obj);
+				} catch(IllegalAccessException e){
+					e.printStackTrace();
+					System.exit(-Integer.parseInt("Shit", 36));
+				}
+				for (Object object: array){
+					if (object != null) System.out.print(object.getClass().getName() + ":" + object.hashCode());
+				}
+			}
+
+			System.out.println();
 		}
 	}
 }
