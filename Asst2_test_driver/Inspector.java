@@ -103,28 +103,48 @@ public class Inspector {
 		return ret;
 	}
 
-	private String arrayCodeToFormattedString(String code){
-    	String ret = "";
-    	String type = "";
+	private Matcher getArrayMatcher(String code){
 		//checks 'code' against the regex. regex looks for array types of n>0 dimensions
 		//array types occasionally have a semi colon at the end and IDK why
 		//hence the ending being things that aren't colons followed by maybe some colons
 		Matcher matcher = Pattern.compile("([\\[]+)([BCDFIJLSZ])([^;]*);*").matcher(code);
 
-		if (!matcher.matches()) return ""; //not a match then return the empty string. probably shouldn't happen ever
+		if (!matcher.matches()) return null; //not a match then return null. probably shouldn't happen ever
+		return matcher;
+	}
 
-		type = matcher.group(2); //isolate just the type character
-		boolean typeFound = false;
+	private int getArrayType(String type){
 		for (int i = 0; i < ARRAY_TYPE_CODES.length; i++){
 			if (type.equals(ARRAY_TYPE_CODES[i])){
-				ret = ret.concat(ARRAY_TYPE_NAMES[i]);
-				typeFound = true;
-				break; //no need to search the rest of the list
+				return i;
 			}
 		}
-		if (!typeFound){ //type.equals("L") (for reference types)
-			ret = ret.concat(matcher.group(3)); //put the class name in here
-		}
+		if (type.equals("L")) return ARRAY_TYPE_CODES.length;
+		else return -1;
+	}
+
+	private String arrayCodeToFormattedString(String code){
+    	String ret = "";
+    	String type = "";
+		Matcher matcher = getArrayMatcher(code);
+		if (matcher == null) return "";//not a match then return the empty string. probably shouldn't happen ever
+
+		type = matcher.group(2); //isolate just the type character
+//		boolean typeFound = false;
+//		for (int i = 0; i < ARRAY_TYPE_CODES.length; i++){
+//			if (type.equals(ARRAY_TYPE_CODES[i])){
+//				ret = ret.concat(ARRAY_TYPE_NAMES[i]);
+//				typeFound = true;
+//				break; //no need to search the rest of the list
+//			}
+//		}
+//		if (!typeFound){ //type.equals("L") (for reference types)
+//			ret = ret.concat(matcher.group(3)); //put the class name in here
+//		}
+		int typeNum = getArrayType(type);
+		if(typeNum < ARRAY_TYPE_CODES.length) ret = ret.concat(ARRAY_TYPE_NAMES[typeNum]);
+		else if (typeNum == ARRAY_TYPE_CODES.length) ret = ret.concat(matcher.group(3));
+		else return "";
 		for (int i = 0; i < matcher.group(1).length(); i++){ //add in a pair of square brackets for each open square bracket found
 			ret = ret.concat("[]");
 		}
@@ -209,6 +229,7 @@ public class Inspector {
 				}
 			}
 
+			//todo use getArrayTypeMethod to cast the array
 			//check for array of primitives
 			if (field.getType().isArray()){
 				field.setAccessible(true);
