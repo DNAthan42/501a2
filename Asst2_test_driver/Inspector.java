@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
  * @author Nathan Douglas
  */
 public class Inspector {
+	//todo UNIT TESTING
 
 	private static String[] ARRAY_TYPE_CODES = {"B", "C", "D", "F", "I", "J", "S", "Z"};
 	private static String[] ARRAY_TYPE_NAMES = {"byte", "char", "double", "float", "int", "long", "short", "boolean"};
@@ -212,7 +213,7 @@ public class Inspector {
 	 * @param code the array code to decrypt
 	 * @return a more visually pleasing string
 	 */
-	private String arrayCodeToFormattedString(String code){
+	protected String arrayCodeToFormattedString(String code){
     	String ret = "";
     	String type = "";
 		Matcher matcher = getArrayMatcher(code);
