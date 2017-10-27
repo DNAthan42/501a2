@@ -13,7 +13,6 @@ public class Inspector {
 
 	private static String[] ARRAY_TYPE_CODES = {"B", "C", "D", "F", "I", "J", "S", "Z"};
 	private static String[] ARRAY_TYPE_NAMES = {"byte", "char", "double", "float", "int", "long", "short", "boolean"};
-	private static boolean test = true;
 
 
 	/**
