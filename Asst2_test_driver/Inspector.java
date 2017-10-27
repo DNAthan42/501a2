@@ -135,6 +135,11 @@ public class Inspector {
 		System.out.println();
 	}
 
+	/**
+	 * Returns the signature for a given methdo or constructor using reflection
+	 * @param exec the method or constructor to get
+	 * @return a Formatted string in the form of [Modifiers] [Name]([parameters])
+	 */
 	private String getSignature(Executable exec){
     	Parameter[] parameters = exec.getParameters();
     	String ret = "";
@@ -169,6 +174,15 @@ public class Inspector {
 		return ret;
 	}
 
+	/**
+	 * Checks if the code is a string describing an array type in Java
+	 * @param code the String to decode
+	 * @return	Null if the string is not an array type
+	 * 			a Matcher with three groups otherwise,
+	 * 				Group 1: The open square brackets detailing the dimensions
+	 * 				Group 2: The type code of the array
+	 * 				Group 3: The fully qualified type name
+	 */
 	private Matcher getArrayMatcher(String code){
 		//checks 'code' against the regex. regex looks for array types of n>0 dimensions
 		//array types occasionally have a semi colon at the end and IDK why
@@ -179,6 +193,11 @@ public class Inspector {
 		return matcher;
 	}
 
+	/**
+	 * Given a string in ARRAY_TYPE_CODES, returns the index of the corresponding type in ARRAY_TYPE_NAMES
+	 * @param type the string to check
+	 * @return the index
+	 */
 	private int getArrayType(String type){
 		for (int i = 0; i < ARRAY_TYPE_CODES.length; i++){
 			if (type.equals(ARRAY_TYPE_CODES[i])){
@@ -189,6 +208,11 @@ public class Inspector {
 		else return -1;
 	}
 
+	/**
+	 * Rearranges java's internal array codes to java's developer facing notation
+	 * @param code the array code to decrypt
+	 * @return a more visually pleasing string
+	 */
 	private String arrayCodeToFormattedString(String code){
     	String ret = "";
     	String type = "";
@@ -196,17 +220,6 @@ public class Inspector {
 		if (matcher == null) return "";//not a match then return the empty string. probably shouldn't happen ever
 
 		type = matcher.group(2); //isolate just the type character
-//		boolean typeFound = false;
-//		for (int i = 0; i < ARRAY_TYPE_CODES.length; i++){
-//			if (type.equals(ARRAY_TYPE_CODES[i])){
-//				ret = ret.concat(ARRAY_TYPE_NAMES[i]);
-//				typeFound = true;
-//				break; //no need to search the rest of the list
-//			}
-//		}
-//		if (!typeFound){ //type.equals("L") (for reference types)
-//			ret = ret.concat(matcher.group(3)); //put the class name in here
-//		}
 		int typeNum = getArrayType(type);
 		if(typeNum < ARRAY_TYPE_CODES.length) ret = ret.concat(ARRAY_TYPE_NAMES[typeNum]);
 		else if (typeNum == ARRAY_TYPE_CODES.length) ret = ret.concat(matcher.group(3));
@@ -217,9 +230,12 @@ public class Inspector {
 		return ret;
 	}
 
+	/**
+	 * prints The signature, exceptions, and return types of all given methods
+	 * @param methods the methods to parse
+	 */
 	private void methods(Method[] methods){
     	for (Method method: methods){
-//    		Parameter[] params = method.getParameters();
 
 			System.out.print(getSignature(method));
 
@@ -241,12 +257,22 @@ public class Inspector {
 		}
 	}
 
+	/**
+	 * Prints the signature, exceptions, and return types of all given methods
+	 * @param constructors the constructors to parse
+	 */
 	private void constructors(Constructor[] constructors){
 		for (Constructor constructor: constructors){
 			System.out.println(getSignature(constructor));
 		}
 	}
 
+	/**
+	 * Prints the fields names and values, recurring in if recursive is true and the field is not primitive
+	 * @param fields the fields to parse
+	 * @param obj the object to get the fields of
+	 * @param recursive if true, will inspect each non-primitive object
+	 */
 	private void fields(Field[] fields, Object obj, boolean recursive){
 		String modifiers;
 		HashSet<Field> toInspect = new HashSet<Field>(fields.length); //instantiating with the largest amount of fields we're likely to find.
@@ -293,7 +319,7 @@ public class Inspector {
 						System.out.println("couldn't access field " + field.getType().getName());
 					}
 				}
-				else if (arrayType == ARRAY_TYPE_CODES.length){
+				else if (arrayType == ARRAY_TYPE_CODES.length){ //array of reference types/ object[]
 					Object[] array = null;
 					try {
 						array = (Object[]) field.get(obj);
@@ -306,6 +332,7 @@ public class Inspector {
 						continue;
 					}
 
+					//print each value inside square brackets because that's how Arrays.toString does it.
 					System.out.print("[");
 					boolean first = true;
 					for (Object object: array){
@@ -315,7 +342,7 @@ public class Inspector {
 					}
 					System.out.print("]");
 
-					toInspect.add(field);
+					toInspect.add(field); //mark field as a reference type to be inspected
 				}
 				else {
 					System.out.println("Couldn't get type of array: " + field.getType().getName());
@@ -332,7 +359,7 @@ public class Inspector {
 				}
 				if (fieldObj != null) System.out.printf("%s:%s", fieldObj.getClass().getName(), fieldObj.hashCode());
 				else System.out.print("null");
-				toInspect.add(field);
+				toInspect.add(field); //mark field as a reference type to be inspected
 			}
 
 			System.out.println();
