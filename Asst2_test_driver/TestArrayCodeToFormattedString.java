@@ -17,6 +17,7 @@ public class TestArrayCodeToFormattedString {
 		assertEquals("", inspector.arrayCodeToFormattedString(""));
 		assertEquals("", inspector.arrayCodeToFormattedString("Invalid"));
 		assertEquals("", inspector.arrayCodeToFormattedString("Object[]"));
+		assertEquals("", inspector.arrayCodeToFormattedString("I")); //no open square brackets
 	}
 
 	@Test

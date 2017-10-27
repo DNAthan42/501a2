@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
 public class Inspector {
 	//todo UNIT TESTING
 
-	private static String[] ARRAY_TYPE_CODES = {"B", "C", "D", "F", "I", "J", "S", "Z"};
-	private static String[] ARRAY_TYPE_NAMES = {"byte", "char", "double", "float", "int", "long", "short", "boolean"};
+	public static final String[] ARRAY_TYPE_CODES = {"B", "C", "D", "F", "I", "J", "S", "Z"};
+	public static final String[] ARRAY_TYPE_NAMES = {"byte", "char", "double", "float", "int", "long", "short", "boolean"};
 
 
 	/**
@@ -199,7 +199,7 @@ public class Inspector {
 	 * @param type the string to check
 	 * @return the index
 	 */
-	private int getArrayType(String type){
+	protected int getArrayType(String type){
 		for (int i = 0; i < ARRAY_TYPE_CODES.length; i++){
 			if (type.equals(ARRAY_TYPE_CODES[i])){
 				return i;
