@@ -16,23 +16,34 @@ public class Inspector {
 	private static boolean test = true;
 
 
+	/**
+	 * Required override method, forwards to more flexible 3 arg method
+	 * @param obj The object to inspect
+	 * @param recursive If true, will recursively inspect all non primitive fields
+	 */
 	public void inspect(Object obj, boolean recursive){
 		inspect(obj, recursive, obj.getClass());
 	}
-    /**
-     * Main inspection method
-     * @param obj
-     * @param recursive
-     */
+
+	/**
+	 * Main driver method for inspections
+	 * @param obj the object to inspect
+	 * @param recursive if true, will recursively Inspect all non primitive fields
+	 * @param scope the Class in obj's hierarchy in which to inspect from. Returns immediately if scope is not in obj's hierarchy.
+	 */
     public void inspect(Object obj, boolean recursive, Class scope){
 
     	Method[] methods;
     	Constructor[] constructors;
     	Field[] fields;
 
+    	if (!scope.isInstance(obj)) {
+    		System.out.println("FATAL: OBJECT SCOPE MISMATCH");
+    		return;
+		}
     	Class thisClass = scope;
 
-    	//todo: catch if this class is an array type and handle differently
+		//If inspecting an array type, inspect each non primitive index
 		if (thisClass.isArray()) {
 			Matcher namePieces = getArrayMatcher(thisClass.getName());
 			int arrayType = getArrayType(namePieces.group(2));
@@ -47,6 +58,7 @@ public class Inspector {
 			return;
 		}
 
+		//Not an array, print header information for the object
         declaringClass(thisClass);
         superClass(thisClass);
         interfaces(thisClass);
@@ -69,6 +81,7 @@ public class Inspector {
         fields = thisClass.getDeclaredFields();
         fields(fields, obj, recursive);
 
+        // Don't try and recur into Object's parent class
         if (!thisClass.equals(Object.class)) {
 			System.out.println("\n-------------------Recurring Upwards------------------");
         	inspect(obj, recursive, thisClass.getSuperclass());
@@ -76,14 +89,26 @@ public class Inspector {
 		else System.out.println("\n-----------------End Upward Recursion-----------------");
     }
 
-    private void declaringClass(Class thisClass){
+	/**
+	 * Prints the formatted class name for the given class
+	 * @param thisClass the class whose name should be printed
+	 */
+	private void declaringClass(Class thisClass){
     	System.out.print("class ");
     	if (thisClass.isArray()) System.out.println(arrayCodeToFormattedString(thisClass.getName()));
     	else System.out.println(thisClass.getName());
     }
 
-    private void superClass(Class thisClass){ System.out.println("extends " + thisClass.getSuperclass()); }
+	/**
+	 * Prints the formatted superclass name for the given class
+	 * @param thisClass the class whose super should be printed
+	 */
+	private void superClass(Class thisClass){ System.out.println("extends " + thisClass.getSuperclass()); }
 
+	/**
+	 * Prints the formatted interface name for the given class
+	 * @param thisClass
+	 */
     private void interfaces(Class thisClass){
     	boolean first = true; //string formatting is a pita
     	Class[] interfaces = thisClass.getInterfaces();
