@@ -179,7 +179,7 @@ public class Inspector {
 
 	private void methods(Method[] methods){
     	for (Method method: methods){
-    		Parameter[] params = method.getParameters();
+//    		Parameter[] params = method.getParameters();
 
 			System.out.print(getSignature(method));
 
