@@ -1,5 +1,6 @@
 import java.lang.reflect.*;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,25 +13,45 @@ public class Inspector {
 
 	private static String[] ARRAY_TYPE_CODES = {"B", "C", "D", "F", "I", "J", "S", "Z"};
 	private static String[] ARRAY_TYPE_NAMES = {"byte", "char", "double", "float", "int", "long", "short", "boolean"};
+	private static boolean test = true;
 
+
+	public void inspect(Object obj, boolean recursive){
+		inspect(obj, recursive, obj.getClass());
+	}
     /**
      * Main inspection method
      * @param obj
      * @param recursive
      */
-    public void inspect(Object obj, boolean recursive){
+    public void inspect(Object obj, boolean recursive, Class scope){
 
     	Method[] methods;
     	Constructor[] constructors;
     	Field[] fields;
 
-    	Class thisClass = obj.getClass();
+    	Class thisClass = scope;
 
     	//todo: catch if this class is an array type and handle differently
+		if (thisClass.isArray()) {
+			Matcher namePieces = getArrayMatcher(thisClass.getName());
+			int arrayType = getArrayType(namePieces.group(2));
+			if (arrayType < ARRAY_TYPE_CODES.length) return; // nothing to inspect in a primitive array.
+			if (arrayType < 0) return; // couldn't parse array type. something went very wrong.
+			Object[] array = (Object[]) obj; // otherwise, we have an array of objects, which we can inspect
+			for (int i = 0; i < array.length; i++){
+				System.out.printf("%s[%d]\n", namePieces.group(3), i);
+				if (array[i] == null) System.out.println("null");
+				else inspect(array[i], recursive);
+			}
+			return;
+		}
 
-        declaringClass(obj);
-        superClass(obj);
-        interfaces(obj);
+        declaringClass(thisClass);
+        superClass(thisClass);
+        interfaces(thisClass);
+
+        System.out.println();
 
         System.out.println("Method Summary");
         methods = thisClass.getDeclaredMethods();
@@ -46,27 +67,26 @@ public class Inspector {
 
         System.out.println("Field Summary");
         fields = thisClass.getDeclaredFields();
-        fields(fields, obj);
+        fields(fields, obj, recursive);
 
-        //move up the hierarchy by casting obj to it's super class
-		System.out.println("Class: " + obj.getClass());
-		System.out.println("Super: " + obj.getClass().getSuperclass());
-		Object obj2 = obj.getClass().getSuperclass().cast(obj);
-		System.out.println("Cast:  " + obj2.getClass());
-
+        if (!thisClass.equals(Object.class)) {
+			System.out.println("\n-------------------Recurring Upwards------------------");
+        	inspect(obj, recursive, thisClass.getSuperclass());
+		}
+		else System.out.println("\n-----------------End Upward Recursion-----------------");
     }
 
-    private void declaringClass(Object obj){
+    private void declaringClass(Class thisClass){
     	System.out.print("class ");
-    	if (obj.getClass().isArray()) System.out.println(arrayCodeToFormattedString(obj.getClass().getName()));
-    	else System.out.println(obj.getClass().getName());
+    	if (thisClass.isArray()) System.out.println(arrayCodeToFormattedString(thisClass.getName()));
+    	else System.out.println(thisClass.getName());
     }
 
-    private void superClass(Object obj){ System.out.println("extends " + obj.getClass().getSuperclass()); }
+    private void superClass(Class thisClass){ System.out.println("extends " + thisClass.getSuperclass()); }
 
-    private void interfaces(Object obj){
+    private void interfaces(Class thisClass){
     	boolean first = true; //string formatting is a pita
-    	Class[] interfaces = obj.getClass().getInterfaces();
+    	Class[] interfaces = thisClass.getInterfaces();
     	System.out.print("implements ");
     	for (Class i: interfaces){
     		System.out.printf("%s%s", (first)?"":", ", i);
@@ -187,8 +207,9 @@ public class Inspector {
 		}
 	}
 
-	private void fields(Field[] fields, Object obj){
+	private void fields(Field[] fields, Object obj, boolean recursive){
 		String modifiers;
+		HashSet<Field> toInspect = new HashSet<Field>(fields.length); //instantiating with the largest amount of fields we're likely to find.
 		for (Field field: fields){
 
 			modifiers = Modifier.toString(field.getModifiers());
@@ -210,7 +231,7 @@ public class Inspector {
 				} catch (IllegalAccessException e) {
 					//I literally just setAccessible(true). This shouldn't happen
 					e.printStackTrace();
-					System.exit(-Integer.parseInt("Fuck", 36));
+					System.exit(-Integer.parseInt("How", 36));
 				}
 			}
 
@@ -253,6 +274,8 @@ public class Inspector {
 						if (first) first = false;
 					}
 					System.out.print("]");
+
+					toInspect.add(field);
 				}
 				else {
 					System.out.println("Couldn't get type of array: " + field.getType().getName());
@@ -269,9 +292,29 @@ public class Inspector {
 				}
 				if (fieldObj != null) System.out.printf("%s:%s", fieldObj.getClass().getName(), fieldObj.hashCode());
 				else System.out.print("null");
+				toInspect.add(field);
 			}
 
 			System.out.println();
+		}
+
+		//inspect all of the non-primitive fields if recursive is set
+		if (recursive && toInspect.size() != 0) {
+			System.out.println("\n------------------Recurring Laterally-----------------");
+			for (Field field: toInspect){
+				System.out.println("-----start " + field.getName());
+				field.setAccessible(true);
+				try {
+					Object fieldObj = field.get(obj);
+					if (fieldObj == null) System.out.println("null");
+					else inspect(field.get(obj), recursive);
+					System.out.println("-----end " + field.getName());
+				} catch (IllegalAccessException e) {
+					//Shouldn't be reached
+				}
+			}
+			System.out.println("\n-----------------End Lateral Recursion----------------");
+
 		}
 	}
 }
