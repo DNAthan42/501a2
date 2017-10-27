@@ -37,7 +37,7 @@ public class Inspector {
     	Constructor[] constructors;
     	Field[] fields;
 
-    	if (!scope.isInstance(obj)) {
+    	if (!scope.isInstance(obj) && !scope.isInterface()) {
     		System.out.println("FATAL: OBJECT SCOPE MISMATCH");
     		return;
 		}
@@ -81,12 +81,26 @@ public class Inspector {
         fields = thisClass.getDeclaredFields();
         fields(fields, obj, recursive);
 
+        //Don't recur into interfaces if there are none
+		if (thisClass.getInterfaces().length != 0){
+			System.out.println("\n---------------Start Interface Recursion--------------");
+			for (Class iClass: thisClass.getInterfaces()){
+				System.out.println("\n-----------------Recurring Interface------------------");
+				inspect(obj, recursive, iClass);
+			}
+			System.out.println("\n--------------End Interface Recursion-----------------");
+		}
         // Don't try and recur into Object's parent class
-        if (!thisClass.equals(Object.class)) {
+        //if (!thisClass.equals(Object.class)
+		if (thisClass.getSuperclass() != null) {
+
 			System.out.println("\n-------------------Recurring Upwards------------------");
         	inspect(obj, recursive, thisClass.getSuperclass());
+			System.out.println("\n-----------------End Upward Recursion-----------------");
+
+
 		}
-		else System.out.println("\n-----------------End Upward Recursion-----------------");
+		//else System.out.println("\n-----------------End Upward Recursion-----------------");
     }
 
 	/**
@@ -112,6 +126,7 @@ public class Inspector {
     private void interfaces(Class thisClass){
     	boolean first = true; //string formatting is a pita
     	Class[] interfaces = thisClass.getInterfaces();
+    	if (interfaces.length == 0) return; // no interfaces, thus nothing to print
     	System.out.print("implements ");
     	for (Class i: interfaces){
     		System.out.printf("%s%s", (first)?"":", ", i);
